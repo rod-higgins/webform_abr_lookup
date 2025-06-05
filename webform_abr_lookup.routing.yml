@@ -1,5 +1,5 @@
 webform_abr_lookup.settings:
-  path: '/admin/config/webform/abn-lookup'
+  path: '/admin/config/webform/abr-lookup'
   defaults:
     _form: '\Drupal\webform_abr_lookup\Form\WebformAbrLookupSettingsForm'
     _title: 'ABN Lookup Settings'
@@ -9,7 +9,7 @@ webform_abr_lookup.settings:
 webform_abr_lookup.autocomplete.abn:
   path: '/webform_abr_lookup/autocomplete/abr/{string}'
   defaults:
-    _controller: '\Drupal\webform_abr_lookup\Controller\AbnAutocompleteController::abnAutocomplete'
+    _controller: '\Drupal\webform_abr_lookup\Controller\AbrAutocompleteController::abnAutocomplete'
   methods: [GET]
   requirements:
     _access: 'TRUE'

@@ -177,8 +177,8 @@ class WebformAbrLookupSettingsForm extends ConfigFormBase {
     }
 
     // Temporarily update config for testing.
-    $original_guid = $this->config('webform_abn_lookup.settings')->get('abr_guid');
-    $this->configFactory()->getEditable('webform_abn_lookup.settings')
+    $original_guid = $this->config('webform_abr_lookup.settings')->get('abr_guid');
+    $this->configFactory()->getEditable('webform_abr_lookup.settings')
       ->set('abr_guid', $guid)
       ->save();
 
@@ -207,7 +207,7 @@ class WebformAbrLookupSettingsForm extends ConfigFormBase {
     }
 
     // Restore original GUID.
-    $this->configFactory()->getEditable('webform_abn_lookup.settings')
+    $this->configFactory()->getEditable('webform_abr_lookup.settings')
       ->set('abr_guid', $original_guid)
       ->save();
 

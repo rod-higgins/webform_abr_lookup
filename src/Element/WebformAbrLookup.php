@@ -4,12 +4,12 @@ namespace Drupal\webform_abr_lookup\Element;
 
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\Core\Render\Element\FormElement;
-use Drupal\webform_abn_lookup\Service\AbrClientService;
+use Drupal\webform_abr_lookup\Service\AbrClientService;
 
 /**
  * Provides a webform element for ABN/ACN lookup.
  *
- * @FormElement("webform_abn_lookup")
+ * @FormElement("webform_abr_lookup")
  */
 class WebformAbrLookup extends FormElement {
 
@@ -40,7 +40,7 @@ class WebformAbrLookup extends FormElement {
    * Processes the webform ABR lookup element.
    */
   public static function processWebformAbrLookup(&$element, FormStateInterface $form_state, &$complete_form) {
-    $element['#attached']['library'][] = 'webform_abn_lookup/webform_abr_lookup';
+    $element['#attached']['library'][] = 'webform_abr_lookup/webform_abr_lookup';
     
     $lookup_type = $element['#lookup_type'] ?? 'abn';
     $auto_populate = $element['#auto_populate'] ?? TRUE;
@@ -64,11 +64,11 @@ class WebformAbrLookup extends FormElement {
 
     // Add autocomplete route based on lookup type.
     if ($lookup_type === 'name') {
-      $element['search']['#autocomplete_route_name'] = 'webform_abn_lookup.autocomplete.business_name';
+      $element['search']['#autocomplete_route_name'] = 'webform_abr_lookup.autocomplete.business_name';
       $element['search']['#autocomplete_route_parameters'] = ['string' => ''];
     }
     else {
-      $element['search']['#autocomplete_route_name'] = 'webform_abn_lookup.autocomplete.abn';
+      $element['search']['#autocomplete_route_name'] = 'webform_abr_lookup.autocomplete.abn';
       $element['search']['#autocomplete_route_parameters'] = ['string' => ''];
     }
 

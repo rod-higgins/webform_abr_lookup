@@ -44,7 +44,7 @@ class WebformAbrLookup extends WebformElementBase {
    * {@inheritdoc}
    */
   public function getDefaultProperties() {
-    $config = \Drupal::config('webform_abn_lookup.settings');
+    $config = \Drupal::config('webform_abr_lookup.settings');
     
     return [
       'lookup_type' => $config->get('default_lookup_type') ?: 'abn',
@@ -61,7 +61,7 @@ class WebformAbrLookup extends WebformElementBase {
     parent::prepare($element, $webform_submission);
 
     // Set the element type to our custom form element.
-    $element['#type'] = 'webform_abn_lookup';
+    $element['#type'] = 'webform_abr_lookup';
   }
 
   /**

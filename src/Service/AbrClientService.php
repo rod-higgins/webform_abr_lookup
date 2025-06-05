@@ -75,11 +75,11 @@ class AbrClientService {
    *   The search results or NULL on failure.
    */
   public function searchByAbn($abn) {
-    $config = $this->configFactory->get('webform_abn_lookup.settings');
+    $config = $this->configFactory->get('webform_abr_lookup.settings');
     $guid = $config->get('abr_guid');
 
     if (empty($guid)) {
-      $this->loggerFactory->get('webform_abn_lookup')->error('ABR GUID not configured.');
+      $this->loggerFactory->get('webform_abr_lookup')->error('ABR GUID not configured.');
       return NULL;
     }
 
@@ -90,7 +90,7 @@ class AbrClientService {
       return NULL;
     }
 
-    $cache_key = 'webform_abn_lookup:abn:' . $clean_abn;
+    $cache_key = 'webform_abr_lookup:abn:' . $clean_abn;
     $cached = $this->cache->get($cache_key);
     
     if ($cached && !empty($cached->data)) {
@@ -112,7 +112,7 @@ class AbrClientService {
       $xml = simplexml_load_string($xml_content);
       
       if ($xml === FALSE) {
-        $this->loggerFactory->get('webform_abn_lookup')->error('Failed to parse XML response for ABN: @abn', ['@abn' => $abn]);
+        $this->loggerFactory->get('webform_abr_lookup')->error('Failed to parse XML response for ABN: @abn', ['@abn' => $abn]);
         return NULL;
       }
 
@@ -124,7 +124,7 @@ class AbrClientService {
       return $result;
     }
     catch (RequestException $e) {
-      $this->loggerFactory->get('webform_abn_lookup')->error('ABR API request failed: @message', ['@message' => $e->getMessage()]);
+      $this->loggerFactory->get('webform_abr_lookup')->error('ABR API request failed: @message', ['@message' => $e->getMessage()]);
       return NULL;
     }
   }
@@ -141,14 +141,14 @@ class AbrClientService {
    *   The search results.
    */
   public function searchByName($name, $max_results = 10) {
-    $config = $this->configFactory->get('webform_abn_lookup.settings');
+    $config = $this->configFactory->get('webform_abr_lookup.settings');
     $guid = $config->get('abr_guid');
 
     if (empty($guid) || strlen($name) < 3) {
       return [];
     }
 
-    $cache_key = 'webform_abn_lookup:name:' . md5($name . $max_results);
+    $cache_key = 'webform_abr_lookup:name:' . md5($name . $max_results);
     $cached = $this->cache->get($cache_key);
     
     if ($cached && !empty($cached->data)) {
@@ -172,7 +172,7 @@ class AbrClientService {
       $xml = simplexml_load_string($xml_content);
       
       if ($xml === FALSE) {
-        $this->loggerFactory->get('webform_abn_lookup')->error('Failed to parse XML response for name: @name', ['@name' => $name]);
+        $this->loggerFactory->get('webform_abr_lookup')->error('Failed to parse XML response for name: @name', ['@name' => $name]);
         return [];
       }
 
@@ -184,7 +184,7 @@ class AbrClientService {
       return $results;
     }
     catch (RequestException $e) {
-      $this->loggerFactory->get('webform_abn_lookup')->error('ABR API request failed: @message', ['@message' => $e->getMessage()]);
+      $this->loggerFactory->get('webform_abr_lookup')->error('ABR API request failed: @message', ['@message' => $e->getMessage()]);
       return [];
     }
   }

@@ -21,7 +21,7 @@ class AbrAutocompleteController extends ControllerBase {
   protected $abrClient;
 
   /**
-   * Constructs a new AbnAutocompleteController.
+   * Constructs a new AbrAutocompleteController.
    *
    * @param \Drupal\webform_abr_lookup\Service\AbrClientService $abr_client
    *   The ABR client service.
@@ -35,7 +35,7 @@ class AbrAutocompleteController extends ControllerBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('webform_abn_lookup.abr_client')
+      $container->get('webform_abr_lookup.abr_client')
     );
   }
 
@@ -50,7 +50,7 @@ class AbrAutocompleteController extends ControllerBase {
    * @return \Symfony\Component\HttpFoundation\JsonResponse
    *   The JSON response.
    */
-  public function abnAutocomplete(Request $request, $string) {
+  public function abrAutocomplete(Request $request, $string) {
     $results = [];
     $input = $request->query->get('q', '');
 

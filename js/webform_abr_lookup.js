@@ -14,9 +14,9 @@
     attach: function (context, settings) {
       $('.webform-abr-lookup-search', context).once('webform-abr-lookup').each(function () {
         var $search = $(this);
-        var $wrapper = $search.closest('.webform-abn-lookup');
-        var $selectedAbn = $wrapper.find('.webform-abn-lookup-selected-abn');
-        var $details = $wrapper.find('.webform-abn-lookup-details');
+        var $wrapper = $search.closest('.webform-abr-lookup');
+        var $selectedAbn = $wrapper.find('.webform-abr-lookup-selected-abn');
+        var $details = $wrapper.find('.webform-abr-lookup-details');
         var lookupType = $search.data('lookup-type');
         var autoPopulate = $search.data('auto-populate');
 

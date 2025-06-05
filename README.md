@@ -40,11 +40,11 @@ A Drupal 11 module that provides Australian Business Number (ABN), Australian Co
 
 ## Usage
 
-### Adding ABN Lookup to a Webform
+### Adding ABR Lookup to a Webform
 
 1. Edit or create a webform
 2. Add a new element
-3. Select "ABN Lookup" from the "Advanced elements" category
+3. Select "ABR Lookup" from the "Advanced elements" category
 4. Configure the element:
    - **Lookup Type**: Choose ABN, ACN, or Business Name
    - **Auto-populate**: Enable to automatically fill business details
@@ -94,7 +94,7 @@ Access module settings at `/admin/config/webform/abn-lookup`:
 
 ### Element-Specific Settings
 
-Each ABN lookup element can be individually configured:
+Each ABR lookup element can be individually configured:
 
 - Lookup type (ABN, ACN, or business name)
 - Auto-population behavior
@@ -114,7 +114,7 @@ The module includes comprehensive validation:
 
 Lookup results are cached to improve performance:
 
-- **ABN Lookups**: Cached for configured duration (default: 1 hour)
+- **ABR Lookups**: Cached for configured duration (default: 1 hour)
 - **Name Searches**: Cached for 30 minutes
 - **Cache Keys**: Include search parameters to avoid conflicts
 - **Cache Clearing**: Automatically clears on module uninstall

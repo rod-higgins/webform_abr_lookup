@@ -3,7 +3,7 @@
   "description": "Provides webform element for Australian ABN/ACN and business name lookups using ABR web services",
   "type": "drupal-module",
   "license": "GPL-2.0-or-later",
-  "homepage": "https://www.drupal.org/project/webform_abn_lookup",
+  "homepage": "https://www.drupal.org/project/webform_abr_lookup",
   "authors": [
     {
       "name": "Rod Higgins",
