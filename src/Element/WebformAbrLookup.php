@@ -55,7 +55,7 @@ class WebformAbrLookup extends FormElement {
       '#size' => 60,
       '#maxlength' => 128,
       '#attributes' => [
-        'class' => ['webform-abn-lookup-search'],
+        'class' => ['webform-abr-lookup-search'],
         'data-lookup-type' => $lookup_type,
         'data-auto-populate' => $auto_populate ? '1' : '0',
         'autocomplete' => 'off',
@@ -76,7 +76,7 @@ class WebformAbrLookup extends FormElement {
     $element['selected_abn'] = [
       '#type' => 'hidden',
       '#attributes' => [
-        'class' => ['webform-abn-lookup-selected-abn'],
+        'class' => ['webform-abr-lookup-selected-abn'],
       ],
     ];
 
@@ -87,7 +87,7 @@ class WebformAbrLookup extends FormElement {
         '#title' => t('Business Details'),
         '#open' => FALSE,
         '#attributes' => [
-          'class' => ['webform-abn-lookup-details'],
+          'class' => ['webform-abr-lookup-details'],
         ],
       ];
 
@@ -96,7 +96,7 @@ class WebformAbrLookup extends FormElement {
         '#title' => t('ABN'),
         '#readonly' => TRUE,
         '#attributes' => [
-          'class' => ['webform-abn-lookup-abn'],
+          'class' => ['webform-abr-lookup-abn'],
         ],
       ];
 
@@ -105,7 +105,7 @@ class WebformAbrLookup extends FormElement {
         '#title' => t('ACN'),
         '#readonly' => TRUE,
         '#attributes' => [
-          'class' => ['webform-abn-lookup-acn'],
+          'class' => ['webform-abr-lookup-acn'],
         ],
       ];
 
@@ -114,7 +114,7 @@ class WebformAbrLookup extends FormElement {
         '#title' => t('Entity Name'),
         '#readonly' => TRUE,
         '#attributes' => [
-          'class' => ['webform-abn-lookup-entity-name'],
+          'class' => ['webform-abr-lookup-entity-name'],
         ],
       ];
 
@@ -123,7 +123,7 @@ class WebformAbrLookup extends FormElement {
         '#title' => t('Entity Type'),
         '#readonly' => TRUE,
         '#attributes' => [
-          'class' => ['webform-abn-lookup-entity-type'],
+          'class' => ['webform-abr-lookup-entity-type'],
         ],
       ];
 
@@ -132,7 +132,7 @@ class WebformAbrLookup extends FormElement {
         '#title' => t('GST Status'),
         '#readonly' => TRUE,
         '#attributes' => [
-          'class' => ['webform-abn-lookup-gst-status'],
+          'class' => ['webform-abr-lookup-gst-status'],
         ],
       ];
 
@@ -141,7 +141,7 @@ class WebformAbrLookup extends FormElement {
         '#title' => t('Entity Status'),
         '#readonly' => TRUE,
         '#attributes' => [
-          'class' => ['webform-abn-lookup-entity-status'],
+          'class' => ['webform-abr-lookup-entity-status'],
         ],
       ];
 
@@ -150,7 +150,7 @@ class WebformAbrLookup extends FormElement {
         '#title' => t('State'),
         '#readonly' => TRUE,
         '#attributes' => [
-          'class' => ['webform-abn-lookup-state'],
+          'class' => ['webform-abr-lookup-state'],
         ],
       ];
 
@@ -159,7 +159,7 @@ class WebformAbrLookup extends FormElement {
         '#title' => t('Postcode'),
         '#readonly' => TRUE,
         '#attributes' => [
-          'class' => ['webform-abn-lookup-postcode'],
+          'class' => ['webform-abr-lookup-postcode'],
         ],
       ];
     }
