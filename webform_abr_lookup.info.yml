@@ -4,6 +4,6 @@ description: 'Provides webform element for Australian ABN/ACN and business name 
 package: Web Services
 core_version_requirement: ^10.3 || ^11
 dependencies:
-  - drupal:webform
+  - drupal:webform (>=6.2)
   - drupal:field
 configure: webform_abr_lookup.settings
