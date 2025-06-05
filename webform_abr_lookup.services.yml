@@ -1,0 +1,9 @@
+services:
+  webform_abr_lookup.abr_client:
+    class: Drupal\webform_abr_lookup\Service\AbrClientService
+    arguments: ['@http_client', '@config.factory', '@cache.default', '@logger.factory']
+
+  webform_abr_lookup.element_info:
+    class: Drupal\webform_abr_lookup\Element\WebformAbrLookup
+    tags:
+      - { name: plugin.manager.element_info, id: webform_abr_lookup }

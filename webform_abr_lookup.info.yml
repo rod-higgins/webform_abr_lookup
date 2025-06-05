@@ -1,0 +1,9 @@
+name: 'Webform ABR Lookup'
+type: module
+description: 'Provides webform element for Australian ABN/ACN and business name lookups using ABR web services.'
+package: Web Services
+core_version_requirement: ^10.3 || ^11
+dependencies:
+  - drupal:webform
+  - drupal:field
+configure: webform_abr_lookup.settings

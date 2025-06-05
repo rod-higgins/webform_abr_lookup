@@ -1,0 +1,31 @@
+webform_abr_lookup.settings:
+  path: '/admin/config/webform/abn-lookup'
+  defaults:
+    _form: '\Drupal\webform_abr_lookup\Form\WebformAbrLookupSettingsForm'
+    _title: 'ABN Lookup Settings'
+  requirements:
+    _permission: 'administer webform'
+
+webform_abr_lookup.autocomplete.abn:
+  path: '/webform_abr_lookup/autocomplete/abr/{string}'
+  defaults:
+    _controller: '\Drupal\webform_abr_lookup\Controller\AbnAutocompleteController::abnAutocomplete'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+
+webform_abr_lookup.autocomplete.business_name:
+  path: '/webform_abr_lookup/autocomplete/business-name/{string}'
+  defaults:
+    _controller: '\Drupal\webform_abr_lookup\Controller\AbrAutocompleteController::businessNameAutocomplete'
+  methods: [GET]
+  requirements:
+    _access: 'TRUE'
+
+webform_abr_lookup.lookup:
+  path: '/webform_abr_lookup/lookup'
+  defaults:
+    _controller: '\Drupal\webform_abr_lookup\Controller\AbrAutocompleteController::lookup'
+  methods: [POST]
+  requirements:
+    _access: 'TRUE'

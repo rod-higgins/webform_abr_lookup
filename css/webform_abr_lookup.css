@@ -1,0 +1,119 @@
+/**
+ * @file
+ * Webform ABR Lookup styles.
+ */
+
+.webform-abr-lookup {
+  margin-bottom: 1em;
+}
+
+.webform-abr-lookup-search {
+  position: relative;
+}
+
+.webform-abr-lookup-search.webform-abr-lookup-loading {
+  background-image: url('data:image/gif;base64,R0lGODlhEAAQAPIAAP///wAAAMLCwkJCQgAAAGJiYoKCgpKSkiH/C05FVFNDQVBFMi4wAwEAAAAh/hpDcmVhdGVkIHdpdGggYWpheGxvYWQuaW5mbwAh+QQJCgAAACwAAAAAEAAQAAADMwi63P4wyklrE2MIOggZnAdOmGYJRbExwroUmcG2LmDEwnHQLVsYOd2mBzkYDAdKa+dIAAAh+QQJCgAAACwAAAAAEAAQAAADNAi63P5OjCEgG4QMu7DmikRxQlFUYDEZIGBMRVsaqHwctXXf7WEYB4Ag1xjihkMZsiUkKhIAIfkECQoAAAAsAAAAABAAEAAAAzYIujIjK8pByJDMlFYvBoVjHA70GU7xSUJhmKtwHPAKzLO9HMaoKwJZ7Rf8AYPDDzKpZBqfvwQAIfkECQoAAAAsAAAAABAAEAAAAzMIumIlK8oyhpHsnFZfhYumCYUhDAQxRIdhHBGqRoKw0R8DYlJd8z0fMDgsGo/IpHI5TAAAIfkECQoAAAAsAAAAABAAEAAAAzIIunInK0rnZBTwGPNMgQwmdsNgXGJUlIWEuR5oWUIpz8pAEAMe6TwfwyYsGo/IpFKSAAAh+QQJCgAAACwAAAAAEAAQAAADMwi6IMKQORfjdOe82p4wGccc4CEuQradylesojEMBgsUc2G7sDX3lQGBMLAJibufbSlKAAAh+QQJCgAAACwAAAAAEAAQAAADMgi63P7wjRLLJGKX5rdRGApZLKUFbCT3rL1FT8fMTcfeM8fXfLZaNgGZjBpHJUokCQA7');
+  background-position: right 10px center;
+  background-repeat: no-repeat;
+  padding-right: 30px;
+}
+
+.webform-abr-lookup-details {
+  margin-top: 1em;
+}
+
+.webform-abr-lookup-details summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+.webform-abr-lookup-details[open] summary {
+  margin-bottom: 0.5em;
+}
+
+.webform-abr-lookup-details .form-item {
+  margin-bottom: 0.5em;
+}
+
+.webform-abr-lookup-details input[readonly] {
+  background-color: #f5f5f5;
+  color: #333;
+  cursor: default;
+}
+
+/* Autocomplete dropdown styling */
+.ui-autocomplete {
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.ui-autocomplete .ui-menu-item {
+  padding: 0.25em 0.5em;
+  font-size: 0.9em;
+}
+
+.ui-autocomplete .ui-menu-item .ui-menu-item-wrapper {
+  padding: 0.25em 0.5em;
+}
+
+.ui-autocomplete .ui-state-active {
+  background-color: #0073aa;
+  color: white;
+}
+
+/* Form validation styles */
+.webform-abr-lookup .error {
+  border-color: #d32f2f;
+}
+
+.webform-abr-lookup .form-item .error {
+  border-left: 3px solid #d32f2f;
+  padding-left: 0.5em;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .webform-abr-lookup-search {
+    width: 100%;
+  }
+  
+  .webform-abr-lookup-details .form-item {
+    margin-bottom: 0.75em;
+  }
+}
+
+/* Admin form styles */
+.webform-abr-lookup-settings .form-item {
+  margin-bottom: 1em;
+}
+
+.webform-abr-lookup-settings .form-item .description {
+  margin-top: 0.25em;
+  font-style: italic;
+  color: #666;
+}
+
+#test-results .messages {
+  margin-top: 1em;
+  padding: 0.75em;
+  border-radius: 4px;
+}
+
+#test-results .messages--status {
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+  color: #155724;
+}
+
+#test-results .messages--error {
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+  color: #721c24;
+}
+
+#test-results .messages--warning {
+  background-color: #fff3cd;
+  border-color: #ffeaa7;
+  color: #856404;
+}

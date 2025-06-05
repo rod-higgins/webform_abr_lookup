@@ -1,0 +1,19 @@
+webform_abr_lookup.settings:
+  type: config_object
+  label: 'Webform ABN Lookup settings'
+  mapping:
+    abr_guid:
+      type: string
+      label: 'ABR Authentication GUID'
+    cache_duration:
+      type: integer
+      label: 'Cache duration in seconds'
+    default_lookup_type:
+      type: string
+      label: 'Default lookup type'
+    default_auto_populate:
+      type: boolean
+      label: 'Default auto-populate setting'
+    default_show_details:
+      type: boolean
+      label: 'Default show details setting'

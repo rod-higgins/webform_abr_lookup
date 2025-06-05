@@ -1,0 +1,11 @@
+webform_abr_lookup:
+  version: 1.x
+  js:
+    js/webform_abr_lookup.js: {}
+  css:
+    theme:
+      css/webform_abr_lookup.css: {}
+  dependencies:
+    - core/jquery
+    - core/drupal
+    - core/jquery.ui.autocomplete

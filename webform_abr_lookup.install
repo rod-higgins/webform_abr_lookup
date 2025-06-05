@@ -1,0 +1,93 @@
+<?php
+
+/**
+ * @file
+ * Install, update and uninstall functions for the webform_abr_lookup module.
+ */
+
+/**
+ * Implements hook_requirements().
+ */
+function webform_abr_lookup_requirements($phase) {
+  $requirements = [];
+
+  if ($phase === 'runtime') {
+    $config = \Drupal::config('webform_abr_lookup.settings');
+    $guid = $config->get('abr_guid');
+
+    $requirements['webform_abr_lookup_abr_guid'] = [
+      'title' => t('Webform ABN Lookup - ABR GUID'),
+      'value' => !empty($guid) ? t('Configured') : t('Not configured'),
+      'description' => t('The ABR authentication GUID is required for the ABN lookup functionality to work. <a href="@url">Configure it here</a>.', [
+        '@url' => '/admin/config/webform/abr-lookup',
+      ]),
+      'severity' => !empty($guid) ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+    ];
+
+    // Test the connection if GUID is configured.
+    if (!empty($guid)) {
+      try {
+        $abr_client = \Drupal::service('webform_abr_lookup.abr_client');
+        $test_result = $abr_client->searchByAbn('51824753556'); // Telstra test ABN
+        
+        if ($test_result && !empty($test_result['main_name'])) {
+          $requirements['webform_abr_lookup_connection'] = [
+            'title' => t('Webform ABN Lookup - ABR Connection'),
+            'value' => t('Working'),
+            'description' => t('Successfully connected to ABR web services.'),
+            'severity' => REQUIREMENT_OK,
+          ];
+        }
+        else {
+          $requirements['webform_abr_lookup_connection'] = [
+            'title' => t('Webform ABN Lookup - ABR Connection'),
+            'value' => t('Failed'),
+            'description' => t('Could not retrieve test data from ABR web services. Please check your GUID configuration.'),
+            'severity' => REQUIREMENT_WARNING,
+          ];
+        }
+      }
+      catch (\Exception $e) {
+        $requirements['webform_abr_lookup_connection'] = [
+          'title' => t('Webform ABN Lookup - ABR Connection'),
+          'value' => t('Error'),
+          'description' => t('Error connecting to ABR web services: @error', ['@error' => $e->getMessage()]),
+          'severity' => REQUIREMENT_ERROR,
+        ];
+      }
+    }
+  }
+
+  return $requirements;
+}
+
+/**
+ * Implements hook_install().
+ */
+function webform_abr_lookup_install() {
+  // Set default configuration values.
+  $config = \Drupal::configFactory()->getEditable('webform_abr_lookup.settings');
+  $config->setData([
+    'abr_guid' => '',
+    'cache_duration' => 3600,
+    'default_lookup_type' => 'abn',
+    'default_auto_populate' => TRUE,
+    'default_show_details' => TRUE,
+  ]);
+  $config->save();
+
+  \Drupal::messenger()->addMessage(t('Webform ABN Lookup module has been installed. Please <a href="@url">configure your ABR GUID</a> to enable lookup functionality.', [
+    '@url' => '/admin/config/webform/abr-lookup',
+  ]));
+}
+
+/**
+ * Implements hook_uninstall().
+ */
+function webform_abr_lookup_uninstall() {
+  // Remove configuration.
+  \Drupal::configFactory()->getEditable('webform_abr_lookup.settings')->delete();
+  
+  // Clear cache.
+  \Drupal::cache()->deleteAll('webform_abr_lookup:');
+}
