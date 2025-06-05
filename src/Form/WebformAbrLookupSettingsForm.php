@@ -5,6 +5,8 @@ namespace Drupal\webform_abr_lookup\Form;
 use Drupal\Core\Form\ConfigFormBase;
 use Drupal\Core\Form\FormStateInterface;
 use Drupal\webform_abr_lookup\Service\AbrClientService;
+use Drupal\key\Entity\Key;
+use Drupal\key\KeyRepositoryInterface;
 use Symfony\Component\DependencyInjection\ContainerInterface;
 
 /**
@@ -20,13 +22,23 @@ class WebformAbrLookupSettingsForm extends ConfigFormBase {
   protected $abrClient;
 
   /**
+   * The key repository service.
+   *
+   * @var \Drupal\key\KeyRepositoryInterface
+   */
+  protected $keyRepository;
+
+  /**
    * Constructs a new WebformAbrLookupSettingsForm.
    *
    * @param \Drupal\webform_abr_lookup\Service\AbrClientService $abr_client
    *   The ABR client service.
+   * @param \Drupal\key\KeyRepositoryInterface $key_repository
+   *   The key repository service.
    */
-  public function __construct(AbrClientService $abr_client) {
+  public function __construct(AbrClientService $abr_client, KeyRepositoryInterface $key_repository) {
     $this->abrClient = $abr_client;
+    $this->keyRepository = $key_repository;
   }
 
   /**
@@ -34,7 +46,8 @@ class WebformAbrLookupSettingsForm extends ConfigFormBase {
    */
   public static function create(ContainerInterface $container) {
     return new static(
-      $container->get('webform_abr_lookup.abr_client')
+      $container->get('webform_abr_lookup.abr_client'),
+      $container->get('key.repository')
     );
   }
 
@@ -64,15 +77,31 @@ class WebformAbrLookupSettingsForm extends ConfigFormBase {
       '#open' => TRUE,
     ];
 
-    $form['abr_api']['abr_guid'] = [
-      '#type' => 'textfield',
-      '#title' => $this->t('ABR Authentication GUID'),
-      '#description' => $this->t('Enter your ABR web services authentication GUID. You can register for free access at <a href="@url" target="_blank">@url</a>.', [
+    // Get all available keys for selection.
+    $key_options = [];
+    $keys = $this->keyRepository->getKeys();
+    foreach ($keys as $key_id => $key) {
+      $key_options[$key_id] = $key->label() . ' (' . $key_id . ')';
+    }
+
+    $form['abr_api']['abr_key_id'] = [
+      '#type' => 'select',
+      '#title' => $this->t('ABR Authentication Key'),
+      '#description' => $this->t('Select the key that contains your ABR web services authentication GUID. You can register for free access at <a href="@url" target="_blank">@url</a>. Create a new key at <a href="@key_url">the key management page</a> if needed.', [
         '@url' => 'https://abr.business.gov.au/Documentation/WebServiceRegistration',
+        '@key_url' => '/admin/config/system/keys',
       ]),
-      '#default_value' => $config->get('abr_guid'),
+      '#options' => ['' => $this->t('- Select a key -')] + $key_options,
+      '#default_value' => $config->get('abr_key_id'),
       '#required' => TRUE,
-      '#size' => 60,
+    ];
+
+    $form['abr_api']['abr_base_url'] = [
+      '#type' => 'url',
+      '#title' => $this->t('ABR API Base URL'),
+      '#description' => $this->t('The base URL for the ABR XML Search web service.'),
+      '#default_value' => $config->get('abr_base_url') ?: 'https://abr.business.gov.au/abrxmlsearch/abrxmlsearch.asmx',
+      '#required' => TRUE,
     ];
 
     $form['abr_api']['cache_duration'] = [
@@ -163,12 +192,27 @@ class WebformAbrLookupSettingsForm extends ConfigFormBase {
    * AJAX callback for testing the ABR connection.
    */
   public function testConnection(array &$form, FormStateInterface $form_state) {
-    $guid = $form_state->getValue('abr_guid');
+    $key_id = $form_state->getValue('abr_key_id');
     $test_abn = $form_state->getValue('test_abn');
 
+    if (empty($key_id)) {
+      $form['testing']['test_results']['#markup'] = '<div class="messages messages--error">' . 
+        $this->t('Please select an ABR authentication key first.') . '</div>';
+      return $form['testing']['test_results'];
+    }
+
+    // Load the key and get its value.
+    $key = $this->keyRepository->getKey($key_id);
+    if (!$key) {
+      $form['testing']['test_results']['#markup'] = '<div class="messages messages--error">' . 
+        $this->t('Selected key not found.') . '</div>';
+      return $form['testing']['test_results'];
+    }
+
+    $guid = $key->getKeyValue();
     if (empty($guid)) {
       $form['testing']['test_results']['#markup'] = '<div class="messages messages--error">' . 
-        $this->t('Please enter an ABR GUID first.') . '</div>';
+        $this->t('Selected key is empty or cannot be accessed.') . '</div>';
       return $form['testing']['test_results'];
     }
 
@@ -177,9 +221,12 @@ class WebformAbrLookupSettingsForm extends ConfigFormBase {
     }
 
     // Temporarily update config for testing.
-    $original_guid = $this->config('webform_abr_lookup.settings')->get('abr_guid');
+    $original_key_id = $this->config('webform_abr_lookup.settings')->get('abr_key_id');
+    $original_base_url = $this->config('webform_abr_lookup.settings')->get('abr_base_url');
+    
     $this->configFactory()->getEditable('webform_abr_lookup.settings')
-      ->set('abr_guid', $guid)
+      ->set('abr_key_id', $key_id)
+      ->set('abr_base_url', $form_state->getValue('abr_base_url'))
       ->save();
 
     try {
@@ -206,9 +253,10 @@ class WebformAbrLookupSettingsForm extends ConfigFormBase {
         ]) . '</div>';
     }
 
-    // Restore original GUID.
+    // Restore original configuration.
     $this->configFactory()->getEditable('webform_abr_lookup.settings')
-      ->set('abr_guid', $original_guid)
+      ->set('abr_key_id', $original_key_id)
+      ->set('abr_base_url', $original_base_url)
       ->save();
 
     return $form['testing']['test_results'];
@@ -218,11 +266,29 @@ class WebformAbrLookupSettingsForm extends ConfigFormBase {
    * {@inheritdoc}
    */
   public function validateForm(array &$form, FormStateInterface $form_state) {
-    $guid = $form_state->getValue('abr_guid');
+    $key_id = $form_state->getValue('abr_key_id');
     
-    // Validate GUID format (should be a valid GUID).
-    if (!empty($guid) && !preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $guid)) {
-      $form_state->setErrorByName('abr_guid', $this->t('Please enter a valid GUID format (e.g., 12345678-1234-1234-1234-123456789012).'));
+    // Validate that the selected key exists and contains a valid GUID.
+    if (!empty($key_id)) {
+      $key = $this->keyRepository->getKey($key_id);
+      if (!$key) {
+        $form_state->setErrorByName('abr_key_id', $this->t('Selected key does not exist.'));
+      }
+      else {
+        $guid = $key->getKeyValue();
+        if (empty($guid)) {
+          $form_state->setErrorByName('abr_key_id', $this->t('Selected key is empty or cannot be accessed.'));
+        }
+        elseif (!preg_match('/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i', $guid)) {
+          $form_state->setErrorByName('abr_key_id', $this->t('Selected key does not contain a valid GUID format (e.g., 12345678-1234-1234-1234-123456789012).'));
+        }
+      }
+    }
+
+    // Validate base URL.
+    $base_url = $form_state->getValue('abr_base_url');
+    if (!empty($base_url) && !filter_var($base_url, FILTER_VALIDATE_URL)) {
+      $form_state->setErrorByName('abr_base_url', $this->t('Please enter a valid URL for the ABR API base URL.'));
     }
 
     parent::validateForm($form, $form_state);
@@ -233,7 +299,8 @@ class WebformAbrLookupSettingsForm extends ConfigFormBase {
    */
   public function submitForm(array &$form, FormStateInterface $form_state) {
     $this->config('webform_abr_lookup.settings')
-      ->set('abr_guid', $form_state->getValue('abr_guid'))
+      ->set('abr_key_id', $form_state->getValue('abr_key_id'))
+      ->set('abr_base_url', $form_state->getValue('abr_base_url'))
       ->set('cache_duration', $form_state->getValue('cache_duration'))
       ->set('default_lookup_type', $form_state->getValue('default_lookup_type'))
       ->set('default_auto_populate', $form_state->getValue('default_auto_populate'))

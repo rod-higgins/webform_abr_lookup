@@ -13,38 +13,79 @@ function webform_abr_lookup_requirements($phase) {
 
   if ($phase === 'runtime') {
     $config = \Drupal::config('webform_abr_lookup.settings');
-    $guid = $config->get('abr_guid');
+    $key_id = $config->get('abr_key_id');
 
-    $requirements['webform_abr_lookup_abr_guid'] = [
-      'title' => t('Webform ABN Lookup - ABR GUID'),
-      'value' => !empty($guid) ? t('Configured') : t('Not configured'),
-      'description' => t('The ABR authentication GUID is required for the ABN lookup functionality to work. <a href="@url">Configure it here</a>.', [
+    // Check if a key is configured.
+    $requirements['webform_abr_lookup_abr_key'] = [
+      'title' => t('Webform ABN Lookup - ABR Authentication Key'),
+      'value' => !empty($key_id) ? t('Configured') : t('Not configured'),
+      'description' => t('An ABR authentication key is required for the ABN lookup functionality to work. <a href="@url">Configure it here</a>.', [
         '@url' => '/admin/config/webform/abr-lookup',
       ]),
-      'severity' => !empty($guid) ? REQUIREMENT_OK : REQUIREMENT_WARNING,
+      'severity' => !empty($key_id) ? REQUIREMENT_OK : REQUIREMENT_WARNING,
     ];
 
-    // Test the connection if GUID is configured.
-    if (!empty($guid)) {
+    // Test the connection if key is configured.
+    if (!empty($key_id)) {
       try {
-        $abr_client = \Drupal::service('webform_abr_lookup.abr_client');
-        $test_result = $abr_client->searchByAbn('51824753556'); // Telstra test ABN
-        
-        if ($test_result && !empty($test_result['main_name'])) {
-          $requirements['webform_abr_lookup_connection'] = [
-            'title' => t('Webform ABN Lookup - ABR Connection'),
-            'value' => t('Working'),
-            'description' => t('Successfully connected to ABR web services.'),
-            'severity' => REQUIREMENT_OK,
+        // Check if the key repository service is available.
+        if (!\Drupal::hasService('key.repository')) {
+          $requirements['webform_abr_lookup_key_module'] = [
+            'title' => t('Webform ABN Lookup - Key Module'),
+            'value' => t('Not available'),
+            'description' => t('The Key module is required but not available. Please install and enable the Key module.'),
+            'severity' => REQUIREMENT_ERROR,
           ];
         }
         else {
-          $requirements['webform_abr_lookup_connection'] = [
-            'title' => t('Webform ABN Lookup - ABR Connection'),
-            'value' => t('Failed'),
-            'description' => t('Could not retrieve test data from ABR web services. Please check your GUID configuration.'),
-            'severity' => REQUIREMENT_WARNING,
-          ];
+          $key_repository = \Drupal::service('key.repository');
+          $key = $key_repository->getKey($key_id);
+          
+          if (!$key) {
+            $requirements['webform_abr_lookup_key_exists'] = [
+              'title' => t('Webform ABN Lookup - ABR Key'),
+              'value' => t('Key not found'),
+              'description' => t('The configured ABR authentication key "@key_id" was not found. Please check your key configuration.', [
+                '@key_id' => $key_id,
+              ]),
+              'severity' => REQUIREMENT_ERROR,
+            ];
+          }
+          else {
+            $guid = $key->getKeyValue();
+            if (empty($guid)) {
+              $requirements['webform_abr_lookup_key_value'] = [
+                'title' => t('Webform ABN Lookup - ABR Key Value'),
+                'value' => t('Key is empty'),
+                'description' => t('The configured ABR authentication key "@key_id" is empty or cannot be accessed.', [
+                  '@key_id' => $key_id,
+                ]),
+                'severity' => REQUIREMENT_ERROR,
+              ];
+            }
+            else {
+              // Test the connection.
+              $abr_client = \Drupal::service('webform_abr_lookup.abr_client');
+              $test_result = $abr_client->searchByAbn('51824753556'); // Telstra test ABN
+              
+              if ($test_result && !empty($test_result['main_name'])) {
+                $requirements['webform_abr_lookup_connection'] = [
+                  'title' => t('Webform ABN Lookup - ABR Connection'),
+                  'value' => t('Working'),
+                  'description' => t('Successfully connected to ABR web services.'),
+                  'severity' => REQUIREMENT_OK,
+                ];
+              }
+              else {
+                $requirements['webform_abr_lookup_connection'] = [
+                  'title' => t('Webform ABN Lookup - ABR Connection'),
+                  'value' => t('Failed'),
+                  'description' => t('Could not retrieve test data from ABR web services. Please check your key configuration and ensure the GUID is valid.'),
+                  'severity' => REQUIREMENT_WARNING,
+                ];
+              }
+            }
+          }
         }
       }
       catch (\Exception $e) {
@@ -68,7 +109,8 @@ function webform_abr_lookup_install() {
   // Set default configuration values.
   $config = \Drupal::configFactory()->getEditable('webform_abr_lookup.settings');
   $config->setData([
-    'abr_guid' => '',
+    'abr_key_id' => '',
+    'abr_base_url' => 'https://abr.business.gov.au/abrxmlsearch/abrxmlsearch.asmx',
     'cache_duration' => 3600,
     'default_lookup_type' => 'abn',
     'default_auto_populate' => TRUE,
@@ -76,7 +118,7 @@ function webform_abr_lookup_install() {
   ]);
   $config->save();
 
-  \Drupal::messenger()->addMessage(t('Webform ABN Lookup module has been installed. Please <a href="@url">configure your ABR GUID</a> to enable lookup functionality.', [
+  \Drupal::messenger()->addMessage(t('Webform ABN Lookup module has been installed. Please <a href="@url">configure your ABR authentication key</a> to enable lookup functionality.', [
     '@url' => '/admin/config/webform/abr-lookup',
   ]));
 }
@@ -90,4 +132,30 @@ function webform_abr_lookup_uninstall() {
   
   // Clear cache.
   \Drupal::cache()->deleteAll('webform_abr_lookup:');
+}
+
+/**
+ * Update configuration to use key module instead of storing GUID directly.
+ */
+function webform_abr_lookup_update_8001() {
+  $config = \Drupal::configFactory()->getEditable('webform_abr_lookup.settings');
+  
+  // Get the old GUID value if it exists.
+  $old_guid = $config->get('abr_guid');
+  
+  // Remove the old abr_guid setting.
+  $config->clear('abr_guid');
+  
+  // Add new settings.
+  $config->set('abr_key_id', '');
+  $config->set('abr_base_url', 'https://abr.business.gov.au/abrxmlsearch/abrxmlsearch.asmx');
+  
+  $config->save();
+  
+  // If there was an old GUID, inform the user about migration.
+  if (!empty($old_guid)) {
+    \Drupal::messenger()->addMessage(t('The ABR Lookup module has been updated to use the Key module for secure storage. Your old GUID has been removed from configuration. Please create a new key with your GUID and configure it at <a href="@url">the settings page</a>.', [
+      '@url' => '/admin/config/webform/abr-lookup',
+    ]), 'warning');
+  }
 }

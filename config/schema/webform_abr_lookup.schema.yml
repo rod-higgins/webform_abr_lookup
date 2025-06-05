@@ -2,9 +2,12 @@ webform_abr_lookup.settings:
   type: config_object
   label: 'Webform ABN Lookup settings'
   mapping:
-    abr_guid:
+    abr_key_id:
       type: string
-      label: 'ABR Authentication GUID'
+      label: 'ABR Authentication Key ID'
+    abr_base_url:
+      type: string
+      label: 'ABR API Base URL'
     cache_duration:
       type: integer
       label: 'Cache duration in seconds'

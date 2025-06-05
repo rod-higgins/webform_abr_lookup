@@ -5,6 +5,7 @@ namespace Drupal\webform_abr_lookup\Service;
 use Drupal\Core\Config\ConfigFactoryInterface;
 use Drupal\Core\Cache\CacheBackendInterface;
 use Drupal\Core\Logger\LoggerChannelFactoryInterface;
+use Drupal\key\KeyRepositoryInterface;
 use GuzzleHttp\ClientInterface;
 use GuzzleHttp\Exception\RequestException;
 
@@ -42,9 +43,16 @@ class AbrClientService {
   protected $loggerFactory;
 
   /**
-   * ABR XML Search base URL.
+   * The key repository service.
+   *
+   * @var \Drupal\key\KeyRepositoryInterface
    */
-  const ABR_BASE_URL = 'https://abr.business.gov.au/abrxmlsearch/abrxmlsearch.asmx';
+  protected $keyRepository;
+
+  /**
+   * Default ABR XML Search base URL.
+   */
+  const DEFAULT_ABR_BASE_URL = 'https://abr.business.gov.au/abrxmlsearch/abrxmlsearch.asmx';
 
   /**
    * Constructs a new AbrClientService.
@@ -57,12 +65,56 @@ class AbrClientService {
    *   The cache backend.
    * @param \Drupal\Core\Logger\LoggerChannelFactoryInterface $logger_factory
    *   The logger factory.
+   * @param \Drupal\key\KeyRepositoryInterface $key_repository
+   *   The key repository service.
    */
-  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, CacheBackendInterface $cache, LoggerChannelFactoryInterface $logger_factory) {
+  public function __construct(ClientInterface $http_client, ConfigFactoryInterface $config_factory, CacheBackendInterface $cache, LoggerChannelFactoryInterface $logger_factory, KeyRepositoryInterface $key_repository) {
     $this->httpClient = $http_client;
     $this->configFactory = $config_factory;
     $this->cache = $cache;
     $this->loggerFactory = $logger_factory;
+    $this->keyRepository = $key_repository;
+  }
+
+  /**
+   * Get the ABR authentication GUID from the configured key.
+   *
+   * @return string|null
+   *   The GUID value or NULL if not available.
+   */
+  protected function getAbrGuid() {
+    $config = $this->configFactory->get('webform_abr_lookup.settings');
+    $key_id = $config->get('abr_key_id');
+
+    if (empty($key_id)) {
+      $this->loggerFactory->get('webform_abr_lookup')->error('ABR key ID not configured.');
+      return NULL;
+    }
+
+    $key = $this->keyRepository->getKey($key_id);
+    if (!$key) {
+      $this->loggerFactory->get('webform_abr_lookup')->error('ABR key "@key_id" not found.', ['@key_id' => $key_id]);
+      return NULL;
+    }
+
+    $guid = $key->getKeyValue();
+    if (empty($guid)) {
+      $this->loggerFactory->get('webform_abr_lookup')->error('ABR key "@key_id" is empty or cannot be accessed.', ['@key_id' => $key_id]);
+      return NULL;
+    }
+
+    return $guid;
+  }
+
+  /**
+   * Get the ABR base URL from configuration.
+   *
+   * @return string
+   *   The ABR base URL.
+   */
+  protected function getAbrBaseUrl() {
+    $config = $this->configFactory->get('webform_abr_lookup.settings');
+    return $config->get('abr_base_url') ?: self::DEFAULT_ABR_BASE_URL;
   }
 
   /**
@@ -75,11 +127,8 @@ class AbrClientService {
    *   The search results or NULL on failure.
    */
   public function searchByAbn($abn) {
-    $config = $this->configFactory->get('webform_abr_lookup.settings');
-    $guid = $config->get('abr_guid');
-
+    $guid = $this->getAbrGuid();
     if (empty($guid)) {
-      $this->loggerFactory->get('webform_abr_lookup')->error('ABR GUID not configured.');
       return NULL;
     }
 
@@ -98,7 +147,9 @@ class AbrClientService {
     }
 
     try {
-      $url = self::ABR_BASE_URL . '/SearchByABNv202001';
+      $base_url = $this->getAbrBaseUrl();
+      $url = $base_url . '/SearchByABNv202001';
+      
       $response = $this->httpClient->request('GET', $url, [
         'query' => [
           'searchString' => $clean_abn,
@@ -118,8 +169,10 @@ class AbrClientService {
 
       $result = $this->parseSearchByAbnResponse($xml);
       
-      // Cache for 1 hour.
-      $this->cache->set($cache_key, $result, time() + 3600);
+      // Cache based on configured duration.
+      $config = $this->configFactory->get('webform_abr_lookup.settings');
+      $cache_duration = $config->get('cache_duration') ?: 3600;
+      $this->cache->set($cache_key, $result, time() + $cache_duration);
       
       return $result;
     }
@@ -141,9 +194,7 @@ class AbrClientService {
    *   The search results.
    */
   public function searchByName($name, $max_results = 10) {
-    $config = $this->configFactory->get('webform_abr_lookup.settings');
-    $guid = $config->get('abr_guid');
-
+    $guid = $this->getAbrGuid();
     if (empty($guid) || strlen($name) < 3) {
       return [];
     }
@@ -156,7 +207,9 @@ class AbrClientService {
     }
 
     try {
-      $url = self::ABR_BASE_URL . '/ABRSearchByNameAdvancedSimpleProtocol2017';
+      $base_url = $this->getAbrBaseUrl();
+      $url = $base_url . '/ABRSearchByNameAdvancedSimpleProtocol2017';
+      
       $response = $this->httpClient->request('GET', $url, [
         'query' => [
           'name' => $name,
